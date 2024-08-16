@@ -134,14 +134,24 @@ class UserUserCF:
         
         top_n_ratings_denormalized = top_n_ratings + new_user_means.values[0]
         
-        print("\nBooks we recommend:")
+        recommendations = []
         for book_id, rating in zip(top_n_book_ids, top_n_ratings_denormalized):
             best_book_id = self.get_best_book_id(book_id)
             title = self.get_original_title_by_book_id(best_book_id)
+            
+            # Handle null, NaN, and empty titles
+            if title is None or pd.isna(title):
+                title = "Unknown Title"
+            
             work_id = self.get_work_id(best_book_id)
             isbn = self.find_isbn_by_work_and_book_id(str(work_id), str(best_book_id))
-            # print(f"Book ID: {book_id}, Work ID: {work_id}, Title: {title}, Predicted Rating: {rating:.2f}")
-            print(f"ISBN: {isbn}, Title: {title}, Predicted Rating: {rating:.2f}")
+            
+            recommendations.append({
+                "isbn": isbn if isbn else "Unknown ISBN",  # Handle empty ISBNs
+                "title": title,
+                "predicted_rating": round(rating, 2)
+            })
+        return recommendations
             
     def split_data(self):
         # Splitting the interactions data into training and testing sets
@@ -215,5 +225,5 @@ if __name__ == "__main__":
         print(f"ISBN: {isbn}, Title: {title}, Rating: {row['rating']}")
     
     # Get recommendations for the new user
-    recommender.recommend_books(new_user_ratings, n=20)
+    recommendations = recommender.recommend_books(new_user_ratings, n=20)
     
