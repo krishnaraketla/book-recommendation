@@ -162,4 +162,4 @@ cython_debug/
 #.idea/
 goodreads_data/
 .DS_Store
-*.pyc
+models/*.pyc
