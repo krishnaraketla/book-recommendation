@@ -3,13 +3,15 @@ import numpy as np
 from scipy.sparse import csr_matrix
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.model_selection import train_test_split
+import csv
 
 class UserUserCF:
-    def __init__(self, interactions_path, book_id_map_path, book_works_path):
+    def __init__(self, interactions_path, book_id_map_path, book_works_path, isbn_path = "/Users/krishna/Desktop/MyBookShelf-Project/book-recommendation-model/goodreads_data/isbn.csv"):
         # Load the data
         self.interactions = pd.read_csv(interactions_path)
         self.book_id_map_df = pd.read_csv(book_id_map_path)
         self.book_works_df = pd.read_csv(book_works_path)
+        self.isbn_path = isbn_path
 
         # Create a mapping from CSV book IDs to book IDs
         self.book_id_map = dict(zip(self.book_id_map_df['book_id_csv'], self.book_id_map_df['book_id']))
@@ -17,15 +19,36 @@ class UserUserCF:
         # Build the user-item matrix
         self.user_item_csr, self.book_rating_counts, self.columns = self.build_user_item_matrix(self.interactions)
 
-    def get_work_id(self, book_id):
+    def get_best_book_id(self, book_id):
         return self.book_id_map[book_id]
+    
+    def get_work_id(self, best_book_id):
+        match = self.book_works_df[self.book_works_df['best_book_id'] == best_book_id]
+        if not match.empty:
+            return match['work_id'].values[0]
+        else:
+            return None
 
-    def get_original_title_by_book_id(self, work_id):
-        match = self.book_works_df[self.book_works_df['best_book_id'] == work_id]
+    def get_original_title_by_book_id(self, best_book_id):
+        match = self.book_works_df[self.book_works_df['best_book_id'] == best_book_id]
         if not match.empty:
             return match['original_title'].values[0]
         else:
             return None
+        
+    def find_isbn_by_work_and_book_id(self, target_work_id, target_book_id):
+        # Open and read the CSV file
+        with open(self.isbn_path, 'r') as f:
+            reader = csv.DictReader(f)
+            
+            # Iterate over each row in the CSV file
+            for row in reader:
+                if row['book_id'] == target_book_id:
+                    # Return the matching ISBN
+                    return row['isbn']
+        
+        # Return None if no match is found
+        return None
 
     def build_user_item_matrix(self, interactions):
         user_item_matrix = interactions.pivot(index='user_id', columns='book_id', values='rating')
@@ -111,17 +134,14 @@ class UserUserCF:
         
         top_n_ratings_denormalized = top_n_ratings + new_user_means.values[0]
         
-        print("Books you have rated:")
-        for idx, row in new_user_ratings.iterrows():
-            work_id = self.get_work_id(row['book_id'])
-            title = self.get_original_title_by_book_id(work_id)
-            print(f"Book ID: {row['book_id']}, Title: {title}, Rating: {row['rating']}")
-        
         print("\nBooks we recommend:")
         for book_id, rating in zip(top_n_book_ids, top_n_ratings_denormalized):
-            work_id = self.get_work_id(book_id)
-            title = self.get_original_title_by_book_id(work_id)
-            print(f"Book ID: {book_id}, Title: {title}, Predicted Rating: {rating:.2f}")
+            best_book_id = self.get_best_book_id(book_id)
+            title = self.get_original_title_by_book_id(best_book_id)
+            work_id = self.get_work_id(best_book_id)
+            isbn = self.find_isbn_by_work_and_book_id(str(work_id), str(best_book_id))
+            # print(f"Book ID: {book_id}, Work ID: {work_id}, Title: {title}, Predicted Rating: {rating:.2f}")
+            print(f"ISBN: {isbn}, Title: {title}, Predicted Rating: {rating:.2f}")
             
     def split_data(self):
         # Splitting the interactions data into training and testing sets
@@ -182,10 +202,18 @@ if __name__ == "__main__":
     new_user_ratings = pd.DataFrame({
         'user_id': [9999999999] * 9,
         'book_id': [7300, 1201, 100385, 530615, 48625, 14870, 7170, 19782, 1146577],
-        'rating': [5, 5, 4, 5, 3, 2, 1, 3, 4]
+        'rating': [5, 3, 4, 4, 3, 2, 1, 3, 5]
     })
+    
+    print("Books you have rated:")
+    for idx, row in new_user_ratings.iterrows():
+        best_book_id = recommender.get_best_book_id(row['book_id'])
+        title = recommender.get_original_title_by_book_id(best_book_id)
+        work_id = recommender.get_work_id(best_book_id)
+        isbn = recommender.find_isbn_by_work_and_book_id(str(work_id), str(best_book_id))
+        # print(f"Book ID: {best_book_id}, Work ID: {work_id}, Title: {title}, Rating: {row['rating']}")
+        print(f"ISBN: {isbn}, Title: {title}, Rating: {row['rating']}")
     
     # Get recommendations for the new user
     recommender.recommend_books(new_user_ratings, n=20)
-    # hit_rate = recommender.evaluate()
-    # print(f"Hit Rate: {hit_rate:.2f}")
+    
