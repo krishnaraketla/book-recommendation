@@ -30,3 +30,6 @@ Out of the 1.3 million unique ISBNs, it is important to determine how many are r
 - **Cross-Referencing ISBNS**: Compare the list of ISBNs in the 20k dataset with the total pool of 1.3 million ISBNs.
 - **Calculating Coverage**: Compute the proportion of unique ISBNs from the total pool that are covered in the 20k dataset to understand its coverage and representativeness.
 - **Analyzing Gaps**: Identify and analyze gaps where ISBNs from the larger pool are not represented in the dataset to understand potential limitations.
+
+
+### LOOK TO SIMPLIFY THE DATASET
