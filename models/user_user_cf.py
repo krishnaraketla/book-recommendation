@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 import csv
 
 class UserUserCF:
-    def __init__(self, interactions_path, book_id_map_path, book_works_path, isbn_path = "/Users/krishna/Desktop/MyBookShelf-Project/book-recommendation-model/goodreads_data/isbn.csv"):
+    def __init__(self, interactions_path, book_id_map_path, book_works_path, isbn_path):
         # Load the data
         self.interactions = pd.read_csv(interactions_path)
         self.book_id_map_df = pd.read_csv(book_id_map_path)
@@ -206,7 +206,7 @@ class UserUserCF:
 # Example usage:
 if __name__ == "__main__":
     # Create an instance of the UserUserCF class
-    recommender = UserUserCF("data/interactions.csv", "data/book_id_map.csv", "data/book_works.csv")
+    recommender = UserUserCF("data/interactions.csv", "data/book_id_map.csv", "data/book_works.csv", "data/isbn.csv")
     
     # New user ratings
     new_user_ratings = pd.DataFrame({

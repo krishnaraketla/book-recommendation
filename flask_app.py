@@ -12,7 +12,7 @@ from user_user_cf import UserUserCF
 app = Flask(__name__)
 
 # Load your trained model
-recommender = UserUserCF("data/interactions.csv", "data/book_id_map.csv", "data/book_works.csv")
+recommender = UserUserCF("data/interactions.csv", "data/book_id_map.csv", "data/book_works.csv", "data/isbn.csv")
 
 @app.route('/recommend', methods=['POST'])
 def recommend():
